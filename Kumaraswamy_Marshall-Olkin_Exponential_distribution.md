@@ -1,0 +1,652 @@
+---
+title: "<center> Relatório — Estatística Computacional </center>"
+author:
+- Mestrado em Bioestatística (UEM)
+- Disciplina Estatística Computacional Aplicada à Bioestatística
+- Aluno João Matheus Slujala Krüger Taborda Hneda 
+- Prof. Dr. Josmar Mazucheli
+#geometry: margin=2cm
+#geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
+geometry: "left=1.1cm,right=1.1cm,top=1.75cm,bottom=1.75cm"
+header-includes:
+    - \usepackage{fancyhdr}
+always_allow_html: true
+output:
+  html_document:                    # Classe de documento.
+    # default, cerulean, journal, flatly, readable, spacelab, united, cosmo, lumen, paper, sandstone, simplex, yeti
+    # "default", "tango", "pygments", "kate",  "monochrome", "espresso", "zenburn", "haddock", "textmate"
+    toc: true                       # Exibir sumário.
+    toc_depth: 4                    # Profundidade do sumário.
+    toc_float:                      # Sumário flutuante na borda.
+      collapsed: true              # Serve para indicar se os "subcapítulos" aparecem sozinhos
+      smooth_scroll: true
+    number_sections: true           # Se??es numeradas.
+    theme: lumen
+    highlight: default                # Cores para o destaque de c?digo.
+    fig_width: 7                    # Lagura das figuras.
+    fig_height: 6                   # Altura das figuras.
+    fig_caption: true               # Exibica??o de legenda.
+    code_folding:              # Esconder/exibir bloco de c?digo.
+    keep_md: true                   # Manter o arquivo md.
+  pdf_document:
+    #includes:
+    #  before_body: comentarioslista.tex # Comentarios iniciais lista do professor
+    fig_caption: yes
+    toc: yes
+    toc_depth: 5
+    keep_tex: yes
+    number_sections: no
+#toc-title: Sumário
+---
+
+\newpage
+
+
+
+
+# Introdução
+
+<!-- Encontrar alguma distribuição de probabilidade nova (pelo menos 2 parâmetros) e: -->
+
+<!-- - escrever quem fez, onde usou, como usou, propriedades -->
+<!-- - implementar as funções d, p, q r -->
+<!-- - fazer figuras -->
+<!-- - realizar estudo de simulação (estimação máxima verossimilhança) -->
+<!-- – variar tamanho da amostra e ver como as estimativas mudam, viés, rmse -->
+<!-- - aplicação -->
+
+
+Nesse relatório consta algumas características introdutórias sobre uma nova família de distribuições contínuas denominada de Kumaraswamy Marshall-Olkin Exponential Distribution (KwMOE), a implementação computacional das funções p, d, q e r dessa família, a estimação de alguns parâmetros, estudo de simulação e aplicação em um conjunto de dados. 
+
+# Kumaraswamy Marshall-Olkin Exponential Distribution (KwMOE)
+
+A função de densidade dessa família é:
+
+$$
+\mathrm{f}(\mathrm{x})=\frac{a b(1-p) g(x ; \xi) G(x ; \xi)^{a-1}}{[1-p \bar{G}(\mathrm{x} ; \xi)]^{a+1}}\left\{1-\left[\frac{G(x ; \xi)}{1-p \bar{G}(\mathrm{x} ; \xi)}\right]^{a}\right\}^{b-1}
+$$
+
+E a função distribuição é igual a:
+
+$$
+\mathrm{F}(\mathrm{x})=1-\left\{1-\left[\frac{G(x ; \xi)}{1-p \bar{G}(\mathrm{x} ; \xi)}\right]^{a}\right\}^{b}
+$$
+
+Considerando que X segue uma distribuição exponencial com parâmetro λ > 0,então $\mathrm{g}(\mathrm{x} ; \lambda)=\lambda e^{-\lambda x}, \mathrm{x}>0$ e $\mathrm{G}(\mathrm{x} ; \lambda)=1-e^{-\lambda x}$. Substituindo nas equações acima, temos:
+
+$$
+f_{K w M O E}(x)=\frac{a b \lambda(1-p) e^{-\lambda x}\left(1-e^{-\lambda x}\right)^{a-1}}{\left(1-p e^{-\lambda x}\right)^{a+1}}\left\{1-\left[\frac{1-e^{-\lambda x}}{1-p e^{-\lambda x}}\right]^{a}\right\}^{b-1}
+$$
+e 
+
+$$F(\mathrm{x})=1-\left\{1-\left[\frac{1-e^{-\lambda x}}{1-p e^{-\lambda x}}\right]^{a}\right\}^{b}$$
+
+A função quantílica é igual a:
+
+$$
+x_{q}=\frac{1}{\lambda} \log \left\{\frac{1-p\left[1-(1-q)^{1 / b}\right]^{1 / a}}{1-\left[1-(1-q)^{1 / b}\right]^{1 / a}}\right\}
+$$
+
+Em suma, a forma das funções dessa família citadas acima depende dos valores de 4 parâmetros, os quais são: λ, a, b, p, sendo que: p = 1 - $\bar{p}$ e λ, a, b, $\bar{p}$, x > 0.
+
+
+# Observações
+
+Uma das vantagens em se fazer uso dessa família, é que para alguns determinados valores dos parâmetros, tem-se casos particulares de distribuições, como por exemplo:
+
+1) Se p = 0, então a função de densidade pertence a distribuição Kumaraswamy Exponential (KwE) 
+
+2) Se a = b = 1, então a função de densidade pertence a **Marshall- Olkin Exponential Distribution (MOE)**
+
+3) Quando a = b = 1 e p = 0, então a função de densidade reduz para a distribuição exponencial.
+
+4) Quando a = 1 e p = 0, temos uma distribuição exponencial com parâmetro bλ.
+
+5) Quando b = 1 e p = 0, nós temos outra exponentiated exponential distribution com parâmetro  a e λ, e a função de densidade é  $\mathrm{f}(\mathrm{x})=\mathrm{a} \lambda e^{-\lambda x}\left(1-e^{-\lambda x}\right)^{a-1}$
+
+Através da mudança dos parâmetros da distribuição KwMOE, é possível gerar distribuições de várias formas diferentes, como simétricas, assimétricas a esquerda, etc. Porém, por questões didáticas, a implementação das funções foi feita considerando dois parâmetros fixos como padrão (a = b = 1), assim como na parte da estimação via máxima verossimilhança, estudo de simulação e aplicação do modelo em um conjunto de dados. Dessa forma, as páginas posteriores focam em um caso particular da Kumaraswamy Marshall-Olkin Exponential Distribution (KwMOE), que é a **Marshall- Olkin Exponential Distribution (MOE)**.
+
+# Implementação das funções d, p, q, r
+
+<!-- dkwmoe <- function(x,a=1, b=1, pkwmoe, lambda) -->
+
+<!-- { -->
+<!--     expmenoslambdax <- exp(-lambda * x) -->
+<!--     dKwMOE_p1 <- (a*b*lambda*(1-pkwmoe)*expmenoslambdax*(1-expmenoslambdax)^(a-1)) / ((1-pkwmoe*expmenoslambdax)^(a+1)) -->
+<!--     dKwMOE_p2 <- (1 - ((1 - expmenoslambdax)/(1 - pkwmoe*expmenoslambdax))^a )^(b-1) -->
+<!--     dKwMOE_p1 * dKwMOE_p2 -->
+<!-- } -->
+
+## d - Probability Density Function (PDF)
+
+
+```r
+remove(list=ls())
+
+dkwmoe <- function(x,a=1, b=1, pkwmoe, lambda)
+{
+    dexp <- dexp(x=x,rate=lambda)
+    pexp <- pexp(q=x,rate=lambda)
+
+    dKwMOE_p1 <- (a*b*(1-pkwmoe)*dexp*(pexp^(a-1))) / ((1-pkwmoe*(1-pexp))^(a+1))
+    dKwMOE_p2 <- (1 - ((pexp)/(1 - pkwmoe*(1-pexp)))^a )^(b-1)
+    dKwMOE <- dKwMOE_p1 * dKwMOE_p2
+    dKwMOE
+}
+
+
+dkwmoe_curve <- function(a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="f(x)",xlim = c(0, 2), ylim = c(0, 5),add=FALSE) {
+    curve(
+        dkwmoe(
+            x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+par(mfrow=c(1,2))
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-0.75,-0.25,0.25,0.75),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", \u03BB = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", \u03BB = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", \u03BB = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", \u03BB = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(0,0,0,0),
+               lambda=c(0.5,1,1.5,5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+
+legend(
+    "topright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", \u03BB = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", \u03BB = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", \u03BB = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", \u03BB = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/dKwMOE na mão-1.png" style="display: block; margin: auto;" />
+
+```r
+par(mfrow=c(1,1))
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-30,-15,-2,-1),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", \u03BB = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", \u03BB = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", \u03BB = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", \u03BB = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/dKwMOE na mão-2.png" style="display: block; margin: auto;" />
+
+
+<!-- pkwmoe <- function(q, a=1, b=1, pkwmoe, lambda) -->
+<!-- { -->
+<!--     expmenoslambdax <- exp(-lambda * q) -->
+<!--     1 - (1-((1-expmenoslambdax)/(1-pkwmoe*expmenoslambdax))^a)^b -->
+<!-- } -->
+
+## p - Cumulative Density Function (CDF)
+
+
+```r
+pkwmoe <- function(q, a=1, b=1, pkwmoe, lambda)
+{
+    pexp <- pexp(q=q,rate=lambda)
+
+    1 - (1-(pexp/(1-pkwmoe*(1-pexp)))^a)^b
+}
+
+pkwmoe_curve <- function(x,a=1, b=1, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="F(x)",xlim = c(0, 2), ylim = c(0, 1.1),add=FALSE) {
+    curve(
+        pkwmoe(
+            q = x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+par(mfrow=c(1,2))
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-0.75,-0.25,0.25,0.75),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+pkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+pkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+pkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+pkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "bottomright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", \u03BB = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", \u03BB = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", \u03BB = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", \u03BB = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+abline(h=1,lty=2)
+abline(h=0.5,lty=2)
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-30,-15,-10,-2),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+pkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+pkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+pkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+pkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "bottomright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", \u03BB = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", \u03BB = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", \u03BB = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", \u03BB = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+abline(h=1,lty=2)
+abline(h=0.5,lty=2)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/pKwMOE na mão-1.png" style="display: block; margin: auto;" />
+
+
+## q - Quantile Function
+
+
+```r
+qkwmoe <- function(p, a=1, b=1, pkwmoe, lambda)
+{
+    num <- 1 - pkwmoe * ( (1 - ((1-p)^(1/b)) )^(1/a) )
+    den <- 1 - ( (1 - ((1-p)^(1/b)) )^(1/a) )
+    
+    x_q <- (1/lambda) * log(num/den)
+    x_q
+}
+
+qkwmoe_curve <- function(x,a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="q",ylab = "x_q",xlim = c(0, 1.05), ylim = c(0, 2),add=FALSE) {
+    curve(
+        qkwmoe(
+            p=x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab= latex2exp::TeX(sprintf(r'($%s$)', ylab)),
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-30,-15,-10,-2),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+qkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+qkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+qkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+qkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topleft",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", \u03BB = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", \u03BB = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", \u03BB = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", \u03BB = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+abline(v=0.5,lty=2)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/qKwMOE na mão-1.png" style="display: block; margin: auto;" />
+
+## r - Random Generation 
+
+
+```r
+rkwmoe <- function(n, a=1, b=1, pkwmoe, lambda)
+{
+    U <- runif(n)
+    num <- 1 - pkwmoe * ( (1 - ((1-U)^(1/b)) )^(1/a) )
+    den <- 1 - ( (1 - ((1-U)^(1/b)) )^(1/a) )
+    
+    x_q <- (1/lambda) * log(num/den)
+    x_q
+}
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-30,-15,-10,-2),
+               lambda=c(5,5,5,5))
+
+rkwmoe(n=10,a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1])
+```
+
+```
+##  [1] 0.3692602 0.5274464 0.5162368 0.4175277 0.9930554 0.7616635 1.9188796
+##  [8] 0.8535156 0.3256576 0.9505005
+```
+
+```r
+rkwmoe(n=10,a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2])
+```
+
+```
+##  [1] 0.09604217 0.58986705 0.49849811 1.11570622 0.33036742 0.18284873
+##  [7] 0.81598469 0.98110143 0.64830158 0.71049230
+```
+
+```r
+rkwmoe(n=10,a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3])
+```
+
+```
+##  [1] 0.3649187 0.7275622 0.4928000 0.2846652 0.2140652 0.4212359 0.6669350
+##  [8] 0.6810499 0.5325358 0.3263745
+```
+
+```r
+rkwmoe(n=10,a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4])
+```
+
+```
+##  [1] 0.343292520 0.020165381 0.048117497 0.264282783 0.004779184 0.026992850
+##  [7] 0.433059116 0.804162384 0.458527522 0.571092002
+```
+
+```r
+set.seed(123)
+x <- rkwmoe(
+        n = 10000,
+        a = params$a[1],
+        b = params$b[1],
+        pkwmoe = params$pkwmoe[1],
+        lambda = params$lambda[1]
+    )
+hist(x, prob = T, ylim = c(0,2.5))
+y <- seq(0.1, 100, 0.0001)
+lines(
+    y,
+    dkwmoe(
+        y,
+        a = params$a[1],
+        b = params$b[1],
+        pkwmoe = params$pkwmoe[1],
+        lambda = params$lambda[1]
+    ),
+    lwd = 2,
+    col = "red"
+)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/rKwMOE na mão-1.png" style="display: block; margin: auto;" />
+
+
+# Estimação via máxima verossimilhança e Estudo de simulação
+
+## Estimação via máxima verossimilhança
+
+
+```r
+dados     <-  x
+mle   <-  fitdistrplus::fitdist(dados, distr = 'kwmoe', method = "mle",
+                start = list(pkwmoe = params$pkwmoe[1],lambda =params$lambda[1]),
+                fix.arg=list(a = params$a[1], b = params$b[1])#,
+                #lower=c(0.01,0.01),
+                )$estimate
+mle
+```
+
+```
+##     pkwmoe     lambda 
+## -31.122942   5.069437
+```
+
+## Estudo de simulação
+
+
+```r
+library(fitdistrplus)
+```
+
+```
+## Warning: package 'fitdistrplus' was built under R version 4.1.3
+```
+
+```
+## Loading required package: MASS
+```
+
+```
+## Loading required package: survival
+```
+
+```r
+B     <-  2000
+n     <-  seq(20, 200, 30)
+L     <-  length(n)
+param <-  c(1, 1, 0.9, 6)
+mle   <-  list()
+mle   <-  matrix(ncol = 2, nrow = B)
+vies  <-  rmse <- matrix(ncol = 2, nrow = L)
+```
+
+
+
+```r
+for(j in 1:L)
+{
+  set.seed(123)
+  for(i in 1:B)
+    #print(i)
+  {
+    dados     <-  rkwmoe(n[j], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+    mle[i,]   <-  fitdistrplus::fitdist(dados, distr = 'kwmoe', method = "mle",
+                    start = list(pkwmoe = param[3],lambda = param[4]),
+                    fix.arg=list(a = param[1], b = param[2])#,
+                    #lower=c(0.01,0.01),
+                    )$estimate
+  }
+  aux         <-   mle - matrix(param[c(3,4)], ncol = 2, nrow = B, byrow = T)
+  vies[j,]    <-   apply(aux, 2, mean, na.rm = T)
+  rmse[j,]    <-   apply(aux ^  2, 2, mean, na.rm = T)
+  cat(i, n[j], "\n")
+}
+```
+
+```
+## 2000 20 
+## 2000 50 
+## 2000 80 
+## 2000 110 
+## 2000 140 
+## 2000 170 
+## 2000 200
+```
+
+
+```r
+par(mfrow = c(1, 2))
+plot(n, vies[,1], type = "b", pch = 15, main = "Viés de p")
+plot(n, rmse[,1], type = "b", pch = 15, main = "RMSE de p")
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
+
+```r
+plot(n, vies[,2], type = "b", pch = 15, main = "Viés de \u03BB")
+plot(n, rmse[,2], type = "b", pch = 15, main = "RMSE de \u03BB")
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/unnamed-chunk-4-2.png" style="display: block; margin: auto;" />
+
+
+# Aplicação
+
+Os dados são relativos às corridas marcadas por um jogador de críquete em 27 entradas a nível nacional.
+
+
+```r
+x <- c(28,20,6,4,23,127,25,45,41,67,68,3,17,2,
+105,98,55,68,15,3,42,45,7,20,34,9,6)
+
+library(fitdistrplus)
+fit.kwmoe <- fitdistrplus::fitdist(x, distr = 'kwmoe', method = "mle",
+                    start = list(pkwmoe = -30,lambda = 2),
+                    fix.arg=list(a = 1, b = 1)#,
+                    #lower=c(0.01,0.01),
+                    )
+denscomp(fit.kwmoe)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+
+```r
+cdfcomp(fit.kwmoe)
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/unnamed-chunk-5-2.png" style="display: block; margin: auto;" />
+
+```r
+fit.gamma  <- fitdist(data = x, distr = 'gamma', start = list(shape = 1, scale = 1))
+fit.weibul  <- fitdist(data = x, distr = 'weibull', start = list(shape = 1, scale = 1))
+fit.logn    <- fitdist(data = x, distr = 'lnorm', start = list(meanlog = 1, sdlog = 1))
+
+par(mfrow=c(1,2))
+denscomp(list(fit.kwmoe,fit.gamma,fit.weibul, fit.logn))
+cdfcomp(list(fit.kwmoe,fit.gamma,fit.weibul, fit.logn))
+```
+
+<img src="Kumaraswamy_Marshall-Olkin_Exponential_distribution_files/figure-html/unnamed-chunk-5-3.png" style="display: block; margin: auto;" />
+
+
+
+
+
+
+```r
+gofstat(list(fit.kwmoe,fit.gamma,fit.weibul, fit.logn), fitnames = c("kwmoe","gamma", "weibull", "logn"))
+```
+
+```
+## Goodness-of-fit statistics
+##                                   kwmoe      gamma    weibull       logn
+## Kolmogorov-Smirnov statistic 0.09095579 0.09797561 0.09822703 0.12039444
+## Cramer-von Mises statistic   0.03072019 0.03451216 0.03402396 0.08321807
+## Anderson-Darling statistic   0.23964974 0.26469493 0.26295124 0.51777972
+## 
+## Goodness-of-fit criteria
+##                                   kwmoe    gamma  weibull     logn
+## Akaike's Information Criterion 252.0940 252.0484 252.0412 254.0447
+## Bayesian Information Criterion 254.6857 254.6401 254.6329 256.6364
+```
+
+# Conclusão
+
+Na literatura estatística, é importante que novas distribuições de probabilidade sejam elaboradas para explicar os fenômenos da natureza. O modelo apresentado nesse relatório demonstrou-se interessante para ser utilizado pois possui boas medidas de qualidade de ajuste e, portanto, tem a capacidade de auxiliar na explicação do fenômeno estudado. 
+
+# Referências
+
+- Roshini George & S. Thobias (2019) Kumaraswamy Marshall-Olkin Exponential distribution, Communications in Statistics - Theory and Methods, 48:8, 1920-1937, DOI: 10.1080/03610926.2018.1440594
+
+- T. A. Raja and A. H. Mir - On Extension of Some Exponentiated
+Distributions with Application
+
+- Adepoju, K. A. and Chukwu, O. I. (2015) "Maximum Likelihood Estimation of the Kumaraswamy Exponential Distribution with Applications," Journal of Modern Applied Statistical Methods: Vol. 14 : Iss. 1 , Article 18. DOI: 10.22237/jmasm/1430453820
+Available at: http://digitalcommons.wayne.edu/jmasm/vol14/iss1/18
+
+![](imagens/mestrado_bioest_uem.png)

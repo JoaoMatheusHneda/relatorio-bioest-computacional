@@ -1,0 +1,1192 @@
+---
+title: "<center> Kumaraswamy Marshall-Olkin Exponential Distribution </center>"
+author:
+- Mestrado em Bioestatística (UEM)
+- Aluno João Matheus Slujala Krüger Taborda Hneda 
+- Prof. Dr. Josmar Mazucheli
+#geometry: margin=2cm
+#geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
+geometry: "left=1.1cm,right=1.1cm,top=1.75cm,bottom=1.75cm"
+header-includes:
+    - \usepackage{fancyhdr}
+always_allow_html: true
+output:
+  html_document:                    # Classe de documento.
+    # default, cerulean, journal, flatly, readable, spacelab, united, cosmo, lumen, paper, sandstone, simplex, yeti
+    # "default", "tango", "pygments", "kate",  "monochrome", "espresso", "zenburn", "haddock", "textmate"
+    toc: true                       # Exibir sumário.
+    toc_depth: 4                    # Profundidade do sumário.
+    toc_float:                      # Sumário flutuante na borda.
+      collapsed: true              # Serve para indicar se os "subcapítulos" aparecem sozinhos
+      smooth_scroll: true
+    number_sections: true           # Se??es numeradas.
+    theme: lumen
+    highlight: default                # Cores para o destaque de c?digo.
+    fig_width: 7                    # Lagura das figuras.
+    fig_height: 6                   # Altura das figuras.
+    fig_caption: true               # Exibica??o de legenda.
+    code_folding:              # Esconder/exibir bloco de c?digo.
+    keep_md: true                   # Manter o arquivo md.
+  pdf_document:
+    #includes:
+    #  before_body: comentarioslista.tex # Comentarios iniciais lista do professor
+    fig_caption: yes
+    toc: yes
+    toc_depth: 5
+    keep_tex: yes
+    number_sections: no
+#toc-title: Sumário
+---
+
+\newpage
+
+
+```{r, global_options, include=FALSE}
+#install.packages("formatR") # (to wrap the lines of code blocks)
+knitr::opts_chunk$set(echo = TRUE#,tidy.opts = list(width.cutoff = 80), tidy = FALSE # (to wrap the lines of code blocks)
+                      )
+```
+
+# Especificações
+
+Encontrar alguma distribuição de probabilidade nova (pelo menos 2 parâmetros) e:
+
+- escrever quem fez, onde usou, como usou, propriedades
+- implementar as funções d, p, q r
+- fazer figuras
+- realizar estudo de simulação (estimação máxima verossimilhança)
+– variar tamanho da amostra e ver como as estimativas mudam, viés, rmse
+
+
+# Escrever quem fez, onde usou, como usou, propriedades
+
+# Implementar as funções d, p, q, r
+
+
+```{r dKwMOE na mão}
+remove(list=ls())
+# f(x)
+dkwmoe <- function(x,a=1, b=1, pkwmoe, lambda)
+    
+{
+    expmenoslambdax <- exp(-lambda * x)
+    dKwMOE_p1 <- (a*b*lambda*(1-pkwmoe)*expmenoslambdax*(1-expmenoslambdax)^(a-1)) / ((1-pkwmoe*expmenoslambdax)^(a+1))
+    dKwMOE_p2 <- (1 - ((1 - expmenoslambdax)/(1 - pkwmoe*expmenoslambdax))^a )^(b-1)
+    dKwMOE_p1 * dKwMOE_p2
+}
+
+
+dkwmoe_curve <- function(a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="f(x)",xlim = c(-1.8, 10), ylim = c(0, 10),add=FALSE) {
+    curve(
+        dkwmoe(
+            x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-0.75,-0.25,0.25,0.75),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", lambda = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", lambda = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", lambda = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-30,-15,-10,-2),
+               lambda=c(5,5,5,5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", lambda = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", lambda = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", lambda = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(0,0,0,0),
+               lambda=c(0.5,1,1.5,5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+
+legend(
+    "topright",
+    legend = c(
+        paste0("p = ",params$pkwmoe[1],", lambda = ",params$lambda[1]),
+        paste0("p = ",params$pkwmoe[2],", lambda = ",params$lambda[2]),
+        paste0("p = ",params$pkwmoe[3],", lambda = ",params$lambda[3]),
+        paste0("p = ",params$pkwmoe[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col
+)
+
+
+
+```
+
+
+```{r dKwMOE na mão, echo=FALSE, eval=FALSE}
+# legend(
+#     "topright",
+#     legend = c(
+#         paste0("a = ",params$a[1],",  b = ",params$b[1],", lambda = ",params$lambda[1]),
+#         paste0("a = ",params$a[2],",  b = ",params$b[2],", lambda = ",params$lambda[2]),
+#         paste0("a = ",params$a[3],",  b = ",params$b[3],", lambda = ",params$lambda[3]),
+#         paste0("a = ",params$a[4],",  b = ",params$b[4],", lambda = ",params$lambda[4])
+#     ),
+#     lty = 1,
+#     lwd = 2,
+#     col = params$col,
+# )
+
+```
+
+```{r dKwMOE na mão, echo=FALSE, eval=FALSE}
+remove(list=ls())
+# f(x)
+dkwmoe <- function(x,a, b, pkwmoe, lambda)
+    
+{
+    expmenoslambdax <- exp(-lambda * x)
+    dKwMOE_p1 <- (a*b*lambda*(1-pkwmoe)*expmenoslambdax*(1-expmenoslambdax)^(a-1)) / ((1-pkwmoe*expmenoslambdax)^(a+1))
+    dKwMOE_p2 <- (1 - ((1 - expmenoslambdax)/(1 - pkwmoe*expmenoslambdax))^a )^(b-1)
+    dKwMOE_p1 * dKwMOE_p2
+}
+
+
+dkwmoe_curve <- function(a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="f(x)",xlim = c(0, 1.8), ylim = c(0, 10),add=FALSE) {
+    curve(
+        dkwmoe(
+            x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+
+params <- list(a=c(1,1,1,1),
+               b=c(1,1,1,1),
+               pkwmoe=c(-5,-0.5,0.5,0.9),
+               lambda=c(1,2.5,4,6),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("a = ",params$a[1],",  b = ",params$b[1],", lambda = ",params$lambda[1],"    p = ",params$pkwmoe[1]),
+        paste0("a = ",params$a[2],",  b = ",params$b[2],", lambda = ",params$lambda[2],"    p = ",params$pkwmoe[2]),
+        paste0("a = ",params$a[3],",  b = ",params$b[3],", lambda = ",params$lambda[3],"    p = ",params$pkwmoe[3]),
+        paste0("a = ",params$a[4],",  b = ",params$b[4],", lambda = ",params$lambda[4],"    p = ",params$pkwmoe[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col,
+)
+
+```
+
+```{r echo=FALSE, eval=FALSE}
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("a = ",params$a[1],",  b = ",params$b[1],", lambda = ",params$lambda[1],"    p = ",params$p[1]),
+        paste0("a = ",params$a[2],",  b = ",params$b[2],", lambda = ",params$lambda[2],"    p = ",params$p[2]),
+        paste0("a = ",params$a[3],",  b = ",params$b[3],", lambda = ",params$lambda[3],"    p = ",params$p[3]),
+        paste0("a = ",params$a[4],",  b = ",params$b[4],", lambda = ",params$lambda[4],"    p = ",params$p[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col,
+)
+
+```
+
+
+
+```{r dKwMOE com exp, fig.align='center', echo=FALSE, eval=FALSE}
+# f(x)
+dkwmoe <- function(x,a, b, pkwmoe=0, lambda)
+{
+    dexp <- dexp(x=x,rate=lambda)
+    pexp <- pexp(q=x,rate=lambda)
+
+    dKwMOE_p1 <- (a*b*(1-pkwmoe)*dexp*(pexp^(a-1))) / ((1-pkwmoe*(1-pexp))^(a+1))
+    dKwMOE_p2 <- (1 - ((pexp)/(1 - pkwmoe*(1-pexp)))^a )^(b-1)
+    dKwMOE_p1 * dKwMOE_p2
+}
+
+dkwmoe_curve <- function(a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="f(x)",xlim = c(0, 1.8), ylim = c(0, 10),add=FALSE) {
+    curve(
+        dkwmoe(
+            x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+
+params <- list(a=c(12.0,10.0,0.5,15.0),
+               b=c(5.0,2.0,2.5,10.0),
+               pkwmoe=c(0.5,0.5,0.2,0.1),
+               lambda=c(2.5,2.5,2.5,2.5),
+               col=c("blue","red","black","gray"))
+
+dkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+dkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+dkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+dkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topright",
+    legend = c(
+        paste0("a = ",params$a[1],",  b = ",params$b[1],"    pkwmoe = ",params$pkwmoe[1],", lambda = ",params$lambda[1]),
+        paste0("a = ",params$a[2],",  b = ",params$b[2],"    pkwmoe = ",params$pkwmoe[2],", lambda = ",params$lambda[2]),
+        paste0("a = ",params$a[3],",  b = ",params$b[3],"    pkwmoe = ",params$pkwmoe[3],", lambda = ",params$lambda[3]),
+        paste0("a = ",params$a[4],",  b = ",params$b[4],"    pkwmoe = ",params$pkwmoe[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col,
+)
+```
+
+```{r pKwMOE na mão}
+# F(x)
+pkwmoe <- function(x, a, b, pkwmoe = 0, lambda)
+{
+    expmenoslambdax <- exp(-lambda * x)
+    1 - (1-((1-expmenoslambdax)/(1-pkwmoe*expmenoslambdax))^a)^b
+}
+
+
+pkwmoe_curve <- function(x,a, b, pkwmoe = 0, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="F(x)",xlim = c(0, 1.8), ylim = c(0, 1.1),add=FALSE) {
+    curve(
+        pkwmoe(
+            x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+
+params <- list(a=c(12.0,10.0,0.5,15.0),
+               b=c(5.0,2.0,2.5,10.0),
+               pkwmoe=c(0,0,0,0),
+               lambda=c(2.5,2.5,2.5,2.5),
+               col=c("blue","red","black","gray"))
+
+pkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+pkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+pkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+pkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "bottomright",
+    legend = c(
+        paste0("a = ",params$a[1],",  b = ",params$b[1],", lambda = ",params$lambda[1]),
+        paste0("a = ",params$a[2],",  b = ",params$b[2],", lambda = ",params$lambda[2]),
+        paste0("a = ",params$a[3],",  b = ",params$b[3],", lambda = ",params$lambda[3]),
+        paste0("a = ",params$a[4],",  b = ",params$b[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col,
+)
+abline(h=1,lty=2)
+abline(h=0.5,lty=2)
+```
+
+```{r pKwMOE com exp, fig.align='center', echo=FALSE, eval=FALSE}
+# F(x)
+
+pkwmoe <- function(q, a, b, pkwmoe, lambda)
+{
+    pexp <- pexp(q=q,rate=lambda)
+
+    1 - (1-(pexp/(1-pkwmoe*(1-pexp)))^a)^b
+}
+
+pkwmoe_curve <- function(x,a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="x",ylab="F(x)",xlim = c(0, 1.8), ylim = c(0, 1.1),add=FALSE) {
+    curve(
+        pkwmoe(
+            q = x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab = ylab,
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+
+params <- list(a=c(12.0,10.0,0.5,15.0),
+               b=c(5.0,2.0,2.5,10.0),
+               pkwmoe=c(0.5,0.5,0.2,0.1),
+               lambda=c(2.5,2.5,2.5,2.5),
+               col=c("blue","red","black","gray"))
+
+pkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+pkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+pkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+pkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "bottomright",
+    legend = c(
+        paste0("a = ",params$a[1],",  b = ",params$b[1],"    pkwmoe = ",params$pkwmoe[1],", lambda = ",params$lambda[1]),
+        paste0("a = ",params$a[2],",  b = ",params$b[2],"    pkwmoe = ",params$pkwmoe[2],", lambda = ",params$lambda[2]),
+        paste0("a = ",params$a[3],",  b = ",params$b[3],"    pkwmoe = ",params$pkwmoe[3],", lambda = ",params$lambda[3]),
+        paste0("a = ",params$a[4],",  b = ",params$b[4],"    pkwmoe = ",params$pkwmoep[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col,
+)
+abline(h=1,lty=2)
+abline(h=0.5,lty=2)
+
+```
+
+```{r qKwMOE na mão, fig.align='center'}
+
+qkwmoe <- function(p, a, b, pkwmoe = 0, lambda)
+{
+    num <- 1 - pkwmoe * ( (1 - ((1-p)^(1/b)) )^(1/a) )
+    den <- 1 - ( (1 - ((1-p)^(1/b)) )^(1/a) )
+    
+    x_q <- (1/lambda) * log(num/den)
+    x_q
+}
+
+qkwmoe_curve <- function(x,a, b, pkwmoe, lambda,
+                         col="blue",lwd=2,xlab="q",ylab = "x_q",xlim = c(0, 1.05), ylim = c(0, 2),add=FALSE) {
+    curve(
+        qkwmoe(
+            p=x,
+            a = a,
+            b = b,
+            pkwmoe = pkwmoe,
+            lambda = lambda
+        ),
+        col = col, # cor
+        #lty=1, # tipo
+        lwd = lwd, # tamanho
+        xlab = xlab,
+        ylab= latex2exp::TeX(sprintf(r'($%s$)', ylab)),
+        xlim = xlim,
+        ylim = ylim,
+        add = add
+    )
+    
+}
+
+
+
+params <- list(a=c(12.0,10.0,0.5,15.0),
+               b=c(5.0,2.0,2.5,10.0),
+               pkwmoe=c(0,0,0,0),
+               lambda=c(2.5,2.5,2.5,2.5),
+               col=c("blue","red","black","gray"))
+
+qkwmoe_curve(a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1], col=params$col[1], add=FALSE)
+qkwmoe_curve(a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2], col=params$col[2], add=TRUE)
+qkwmoe_curve(a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3], col=params$col[3], add=TRUE)
+qkwmoe_curve(a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4], col=params$col[4], add=TRUE)
+legend(
+    "topleft",
+    legend = c(
+        paste0("a = ",params$a[1],",  b = ",params$b[1],", lambda = ",params$lambda[1]),
+        paste0("a = ",params$a[2],",  b = ",params$b[2],", lambda = ",params$lambda[2]),
+        paste0("a = ",params$a[3],",  b = ",params$b[3],", lambda = ",params$lambda[3]),
+        paste0("a = ",params$a[4],",  b = ",params$b[4],", lambda = ",params$lambda[4])
+    ),
+    lty = 1,
+    lwd = 2,
+    col = params$col,
+)
+
+```
+
+```{r rKwMOE na mão, fig.align='center'}
+rkwmoe <- function(n, a, b, pkwmoe = 0, lambda)
+{
+    U <- runif(n)
+    num <- 1 - pkwmoe * ( (1 - ((1-U)^(1/b)) )^(1/a) )
+    den <- 1 - ( (1 - ((1-U)^(1/b)) )^(1/a) )
+    
+    x_q <- (1/lambda) * log(num/den)
+    x_q
+}
+
+params <- list(a=c(12.0,10.0,0.5,15.0),
+               b=c(5.0,2.0,2.5,10.0),
+               pkwmoe=c(0,0,0,0),
+               lambda=c(2.5,2.5,2.5,2.5))
+
+rkwmoe(n=10,a = params$a[1],  b = params$b[1], pkwmoe = params$pkwmoe[1], lambda = params$lambda[1])
+rkwmoe(n=10,a = params$a[2],  b = params$b[2], pkwmoe = params$pkwmoe[2], lambda = params$lambda[2])
+rkwmoe(n=10,a = params$a[3],  b = params$b[3], pkwmoe = params$pkwmoe[3], lambda = params$lambda[3])
+rkwmoe(n=10,a = params$a[4],  b = params$b[4], pkwmoe = params$pkwmoe[4], lambda = params$lambda[4])
+
+
+x <- rkwmoe(
+        n = 10000,
+        a = params$a[1],
+        b = params$b[1],
+        pkwmoe = params$pkwmoe[1],
+        lambda = params$lambda[1]
+    )
+hist(x, prob = T, ylim = c(0,2.5))
+y <- seq(0.1, 100, 0.0001)
+lines(
+    y,
+    dkwmoe(
+        y,
+        a = params$a[1],
+        b = params$b[1],
+        pkwmoe = params$pkwmoe[1],
+        lambda = params$lambda[1]
+    ),
+    lwd = 2,
+    col = "red"
+)
+
+```
+
+
+# realizar estudo de simulação (estimação máxima verossimilhança)
+
+
+
+```{r}
+remove(list=ls())
+dkwmoe <- function(x,a=1, b=1, pkwmoe, lambda)
+{
+    dexp <- dexp(x=x,rate=lambda)
+    pexp <- pexp(q=x,rate=lambda)
+
+    dKwMOE_p1 <- (a*b*(1-pkwmoe)*dexp*(pexp^(a-1))) / ((1-pkwmoe*(1-pexp))^(a+1))
+    dKwMOE_p2 <- (1 - ((pexp)/(1 - pkwmoe*(1-pexp)))^a )^(b-1)
+    dKwMOE <- dKwMOE_p1 * dKwMOE_p2
+    dKwMOE
+}
+```
+
+
+```{r echo=FALSE, eval=FALSE}
+dkwmoe <- function(x,a=1, b=1, pkwmoe, lambda)
+
+{
+    expmenoslambdax <- exp(-lambda * x)
+    dKwMOE_p1 <- (a*b*lambda*(1-pkwmoe)*expmenoslambdax*(1-expmenoslambdax)^(a-1)) / ((1-pkwmoe*expmenoslambdax)^(a+1))
+    dKwMOE_p2 <- (1 - ((1 - expmenoslambdax)/(1 - pkwmoe*expmenoslambdax))^a )^(b-1)
+    dKwMOE_p1 * dKwMOE_p2
+}
+```
+
+
+```{r }
+pkwmoe <- function(q, a=1, b=1, pkwmoe, lambda)
+{
+    pexp <- pexp(q=q,rate=lambda)
+
+    1 - (1-(pexp/(1-pkwmoe*(1-pexp)))^a)^b
+}
+```
+
+
+```{r echo=FALSE, eval=FALSE}
+pkwmoe <- function(x, a=1, b=1, pkwmoe, lambda)
+{
+    expmenoslambdax <- exp(-lambda * x)
+    1 - (1-((1-expmenoslambdax)/(1-pkwmoe*expmenoslambdax))^a)^b
+}
+```
+
+
+```{r}
+qkwmoe <- function(p, a=1, b=1, pkwmoe, lambda)
+{
+    num <- 1 - pkwmoe * ( (1 - ((1-p)^(1/b)) )^(1/a) )
+    den <- 1 - ( (1 - ((1-p)^(1/b)) )^(1/a) )
+    
+    x_q <- (1/lambda) * log(num/den)
+    x_q
+}
+```
+
+
+```{r}
+rkwmoe <- function(n, a=1, b=1, pkwmoe, lambda)
+{
+    U <- runif(n)
+    num <- 1 - pkwmoe * ( (1 - ((1-U)^(1/b)) )^(1/a) )
+    den <- 1 - ( (1 - ((1-U)^(1/b)) )^(1/a) )
+    
+    x_q <- (1/lambda) * log(num/den)
+    x_q
+}
+```
+
+
+```{r}
+library(fitdistrplus)
+B     <-  2000
+n     <-  seq(20, 200, 30)
+L     <-  length(n)
+param <-  c(1, 1, 0.9, 6)
+mle   <-  list()
+mle   <-  matrix(ncol = 2, nrow = B)
+vies  <-  rmse <- matrix(ncol = 2, nrow = L)
+
+
+# dados     <-  rkwmoe(n[1], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+# mle[1,]   <-  fitdistrplus::fitdist(dados, distr = 'kwmoe', method = "mle",
+#                 start = list(a = param[1], b = param[2], lambda = param[4]),
+#                 fix.arg=list(pkwmoe=param[3]),
+#                 lower=c(0.01,0.01,0.01),
+#                 )$estimate
+
+
+# dados     <-  rkwmoe(n[1], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+# #dados %>% hist()
+# 
+# set.seed(123)
+# 
+# dados <- c(23,261,87,7,120,14,62,47,225,71,246,21,42,20,5,
+# 12,120,11,3, 14, 71,11,14,11,16, 90, 1,16,52,95)
+# dados <- c(28,20,6,4,23,127,25,45,41,67,68,3,17,2,
+# 105,98,55,68,15,3,42,45,7,20,34,9,6)
+# 
+# 
+# mle   <-  fitdistrplus::fitdist(dados, distr = 'kwmoe', method = "mle",
+#                 start = list(a = param[1], b = param[2], lambda = param[4]),
+#                 fix.arg=list(pkwmoe=0)
+#                 )$estimate
+```
+
+```{r}
+
+# dados     <-  rkwmoe(n[1], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+# mle[i,]   <-  fitdistrplus::fitdist(dados, distr = 'kwmoe', method = "mle",
+#                 start = list(pkwmoe = param[3],lambda = param[4]),
+#                 fix.arg=list(a = param[1], b = param[2])#,
+#                 #lower=c(0.01,0.01),
+#                 )$estimate
+
+
+for(j in 1:L)
+{
+  set.seed(123)
+  for(i in 1:B)
+    #print(i)
+  {
+    dados     <-  rkwmoe(n[j], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+    mle[i,]   <-  fitdistrplus::fitdist(dados, distr = 'kwmoe', method = "mle",
+                    start = list(pkwmoe = param[3],lambda = param[4]),
+                    fix.arg=list(a = param[1], b = param[2])#,
+                    #lower=c(0.01,0.01),
+                    )$estimate
+  }
+  aux         <-   mle - matrix(param[c(3,4)], ncol = 2, nrow = B, byrow = T)
+  vies[j,]    <-   apply(aux, 2, mean, na.rm = T)
+  rmse[j,]    <-   apply(aux ^  2, 2, mean, na.rm = T)
+  cat(i, n[j], "\n")
+}
+
+```
+
+
+
+```{r}
+par(mfrow = c(2, 2))
+plot(n, vies[,1], type = "b", pch = 15)
+plot(n, rmse[,1], type = "b", pch = 15)
+plot(n, vies[,2], type = "b", pch = 15)
+plot(n, rmse[,2], type = "b", pch = 15)
+```
+
+
+
+
+
+```{r}
+logLikFun <- function(param,x) {
+a <- param[1]
+b <- param[2]
+pkwmoe <- param[3]
+lambda <- param[4]
+
+sum(log(dkwmoe(x, a=a, b=b, pkwmoe=pkwmoe, lambda=lambda)))
+}
+
+# logLikFun <- function(param,x) {
+#     
+#     a <- param[1]
+#     b <- param[2]
+#     pkwmoe <- param[3]
+#     lambda <- param[4]
+#     
+#     length(x) * log(a*b*lambda*(1-pkwmoe)) - lambda * sum(x) + (a - 1) * sum(log(1-exp(-lambda*x) )) + (b-1) * sum(log( 1 - ( (1-exp(-lambda*x) ) / (1-pkwmoe*exp(-lambda*x) ) )^a )) - (a+1)*sum(log(1-pkwmoe*exp(-lambda*x)))
+#     
+# }
+
+# mle2 <- maxLik(logLik = logLikFun, x=dados,start = c(a=param[1],b=param[2],pkwmoe=0,lambda=param[4]),
+#               method="NR",fixed=3)$estimate[c(1,2,4)]
+# mle2$estimate[c(1,2,4)]
+# summary(mle)
+
+
+
+for(j in 1:L)
+{
+  set.seed(123)
+  for(i in 1)
+    print(i)
+  {
+    dados     <-  rkwmoe(n[j], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+    mle[i,]   <-  maxLik(logLik = logLikFun, x=dados,start = c(a=param[1],b=param[2],pkwmoe=param[3],lambda=param[4]),
+              method="BFGS",fixed=3)$estimate[c(1,2,4)]
+  }
+  aux         <-   mle - matrix(param[c(1,2,4)], ncol = 3, nrow = B, byrow = T)
+  vies[j,]    <-   apply(aux, 2, mean, na.rm = T)
+  rmse[j,]    <-   apply(aux ^  2, 2, mean, na.rm = T)
+  cat(i, n[j], "\n")
+}
+```
+
+
+```{r}
+set.seed(123)
+ x <- rnorm(100, mean = 1, sd = 2)
+ 
+logLikFun <- function(param) {
+mu <- param[1]
+sigma <- param[2]
+sum(dnorm(x, mean = mu, sd = sigma, log = TRUE))
+}
+
+
+
+mle <- maxLik(logLik = logLikFun, start = c(mu = 0, sigma = 1))
+summary(mle)
+```
+```{r}
+logLikGrad <- function(param) {
+    mu <- param[1]
+    sigma <- param[2]
+    N <- length(x)
+    logLikGradValues <- numeric(2)
+    logLikGradValues[1] <- sum((x - mu) / sigma^2)
+    logLikGradValues[2] <- -N / sigma + sum((x - mu)^2 / sigma^3)
+    return(logLikGradValues)
+}
+mleGrad <- maxLik(logLik = logLikFun, grad = logLikGrad,
+                  start = c(mu = 0, sigma = 1))
+summary(mleGrad)
+```
+
+
+```{r}
+set.seed(123)
+dados <- c(115, 181, 255, 418, 441, 461, 516, 739, 743, 789, 807, 865, 924, 983, 1024, 1062,
+       1063, 1165, 1191, 1222, 1222, 1251, 1277, 1290, 1357, 1369, 1408, 1455, 1478, 1549, 1578,
+       1578, 1599, 1603, 1605, 1696, 1735, 1799, 1815, 1852)
+
+logLikFun <- function(param,x) {
+a <- param[1]
+b <- param[2]
+pkwmoe <- param[3]
+lambda <- param[4]
+
+sum(log(dkwmoe(x, a, b, pkwmoe, lambda)))
+}
+
+mle <- maxLik(logLik = logLikFun, x=dados,start = c(a=2,b=5,pkwmoe=-30,lambda=20),method="SANN")
+mle
+summary(mle)
+
+
+```
+
+```{r}
+logLikFun <- function(param) {
+    
+    a <- param[1]
+    b <- param[2]
+    pkwmoe <- param[3]
+    lambda <- param[4]
+    
+    40 * log(a*b*lambda*(1-pkwmoe)) - lambda * sum(x) + (a - 1) * sum(log(1-exp(-lambda*x) )) + (b-1) * sum(log( 1 - ( (1-exp(-lambda*x) ) / (1-pkwmoe*exp(-lambda*x) ) )^a )) - (a+1)*sum(log(1-pkwmoe*exp(-lambda*x)))
+    
+}
+
+library(maxLik);
+start <- c(2, 5,0,19)
+m1 <- maxLik::maxLik(logLikFun, start=start,  fixed = 3, method="NR"#,#"SANN",
+                    #control = list(iterlim = 10000)
+                    )
+m1
+#summary(m1)
+
+```
+
+```{r}
+x <- c(115, 181, 255, 418, 441, 461, 516, 739, 743, 789, 807, 865, 924, 983, 1024, 1062,
+       1063, 1165, 1191, 1222, 1222, 1251, 1277, 1290, 1357, 1369, 1408, 1455, 1478, 1549, 1578,
+       1578, 1599, 1603, 1605, 1696, 1735, 1799, 1815, 1852)
+
+logLikGrad <- function(param) {
+    a <- param[1]
+    b <- param[2]
+    pkwmoe <- param[3]
+    lambda <- param[4]
+    
+    n <- length(x)
+    logLikGradValues <- numeric(4)
+    
+    
+    logLikGradValues[1] <- n/a + sum(log( (1-exp(-lambda*x))/(1-pkwmoe*exp(-lambda*x)) )) + (1-b) * sum ( ( ( (1-exp(-lambda*x))/(1-pkwmoe*exp(-lambda*x)) )^a)*log(( (1-exp(-lambda*x))/(1-pkwmoe*exp(-lambda*x)) ))/(1-( ( (1-exp(-lambda*x))/(1-pkwmoe*exp(-lambda*x)) )^a) ))
+    
+    logLikGradValues[2] <- n/b + sum(log(1- (((1-exp(-lambda*x))/(1-pkwmoe*exp(-lambda*x)))^a) ))
+    
+    logLikGradValues[3] <- (-n)/(n-pkwmoe) + (a+1) * sum((exp(-lambda*x))/(1-pkwmoe*exp(-lambda*x)) )
+    
+    logLikGradValues[4] <- n/lambda - sum(x) + (a-1) * sum( (x * exp(-lambda * x)) / (1 - exp(-lambda * x)) ) - pkwmoe * (a + 1) * sum( (x * exp(-lambda * x)) / (1 - pkwmoe * exp(-lambda * x)) ) + a * (1 - b) * (1 - pkwmoe) * sum ( (x * exp(-lambda * x) * ((1 - exp(-lambda * x) )^(a-1))) / ( (1 - pkwmoe * exp(-lambda * x)) * ( ((1 - pkwmoe * exp(-lambda * x)) ^ a) - ((1 - exp(-lambda * x))^a )  ) ) ) 
+    
+    return(logLikGradValues)
+}
+mleGrad <- maxLik(logLik = logLikFun, grad = logLikGrad,
+                  start = c(a = 2, b=5, pkwmoe = -30, lambda = 19),
+                  method="SANN")
+mleGrad
+summary(mleGrad)
+```
+
+
+
+
+
+
+```{r}
+logLikGrad <- function(param) {
+    mu <- param[1]
+    sigma <- param[2]
+    N <- length(x)
+    logLikGradValues <- numeric(2)
+    logLikGradValues[1] <- sum((x - mu) / sigma^2)
+    logLikGradValues[2] <- -N / sigma + sum((x - mu)^2 / sigma^3)
+    return(logLikGradValues)
+}
+mleGrad <- maxLik(logLik = logLikFun, grad = logLikGrad,
+                  start = c(mu = 0, sigma = 1))
+summary(mleGrad)
+```
+
+
+```{r}
+ll(a = 5,
+b = 5,
+p = -15,
+lambda = 0.2)
+getOption("max.print")
+
+est <- stats4::mle(minuslog=ll, start = list(
+            a = 12,
+            b = 5,
+            p = 0.5,
+            lambda = 2.5
+        ))
+summary(est)
+
+
+est <-
+    stats4::mle(
+        ll,
+        start = list(
+            a = 5,
+            b = 5,
+            p = -30,
+            lambda = 15
+        ),
+        lower = list(
+            a = 0.0001,
+            b = 0.0001,
+            p = -Inf,
+            lambda = 0.0001
+        ),
+        optim = stats::optim,
+        method = "L-BFGS-B"
+    )
+```
+
+```{r}
+dados <- c(115, 181, 255, 418, 441, 461, 516, 739, 743, 789, 807, 865, 924, 983, 1024, 1062,
+1063, 1165, 1191, 1222, 1222, 1251, 1277, 1290, 1357, 1369, 1408, 1455, 1478, 1549, 1578,
+1578, 1599, 1603, 1605, 1696, 1735, 1799, 1815, 1852)
+
+library(fitdistrplus)
+mle <- fitdist(
+    dados,
+    distr = 'kwmoe',
+    method = "mle",
+    start = list(
+        a = 1,
+        b = 2,
+        #pkwmoe = 0.5,
+        lambda = 2.5
+    ),
+    fix.arg=list(pkwmoe=0)#,
+    #lower=c(0.0001,0.0001,-1000,0.0001),
+   # upper=c(1000,1000,0.99999,1000)
+)
+mle
+
+
+```
+
+
+
+```{r}
+n <- 20
+params <- list(a=c(0.1,1.5),
+               b=c(0.1,1.5),
+               pkwmoe=c(0.3,0.8),
+               lambda=c(0.02,0.05))
+
+(dados <- rkwmoe(
+    n = n,
+    a = params$a[1],
+    b = params$b[1],
+    pkwmoe = params$pkwmoe[1],
+    lambda = params$lambda[1]
+))
+
+mle <- fitdistrplus::fitdist(
+    dados,
+    distr = 'kwmoe',
+    method = "mle",
+    start = list(
+        a = params$a[1],
+        b = params$b[1],
+        pkwmoe = params$pkwmoe[1],
+        lambda = params$lambda[1]
+    ),
+    lower=c(0.0001,0.0001,-1000,0.0001),
+    upper=c(1000,1000,0.99999,1000)
+)
+mle
+# plot(mle)
+```
+
+
+```{r}
+library(fitdistrplus)
+B     <-  2000
+n     <-  seq(100, 200, 30)
+L     <-  length(n)
+param <-  c(params$a[1], params$b[1], params$pkwmoe[1], params$lambda[1])
+mle   <-  list()
+mle   <-  matrix(ncol = 4, nrow = B)
+vies  <-  rmse <- matrix(ncol = 4, nrow = L)
+for(j in 1:L)
+{
+  cat("j=",j," ")
+  #set.seed(123)
+  set.seed(123456)
+  for(i in 1:B)
+  {
+    cat("i=",i, " ")
+    dados     <-  rkwmoe(n[j], a = param[1], b = param[2], pkwmoe = param[3], lambda = param[4])
+    mle[i, ]   <-  fitdistrplus::fitdist(
+        dados,
+        distr = 'kwmoe',
+        method = "mge",
+        start = list(
+            a = param[1],
+            b = param[2],
+            pkwmoe = param[3],
+            lambda = param[4]
+        ),
+        lower = c(0.0001, 0.0001, -Inf, 0.0001),
+        upper = c(Inf, Inf, 0.99999, Inf)
+    )$estimate
+  }
+  # aux         <-   mle - matrix(param, ncol = 4, nrow = B, byrow = T)
+  # vies[j,]    <-   apply(aux, 2, mean, na.rm = T)
+  # rmse[j,]    <-   apply(aux ^  2, 2, mean, na.rm = T)
+  # cat(i, n[j], "\n")
+}
+
+# dados
+# 
+# x11();
+# par(mfrow = c(2, 2))
+# plot(n, vies[,1], type = "b", pch = 15)
+# plot(n, rmse[,1], type = "b", pch = 15)
+# plot(n, vies[,2], type = "b", pch = 15)
+# plot(n, rmse[,2], type = "b", pch = 15)
+```
+
+
+
+```{r}
+dados <- c(115, 181, 255, 418, 441, 461, 516, 739, 743, 789, 807, 865, 924, 983, 1024, 1062,
+1063, 1165, 1191, 1222, 1222, 1251, 1277, 1290, 1357, 1369, 1408, 1455, 1478, 1549, 1578,
+1578, 1599, 1603, 1605, 1696, 1735, 1799, 1815, 1852)
+
+mle <- fitdistrplus::fitdist(
+    dados,
+    distr = 'kwmoe',
+    method = "mle",
+    start = list(
+        a = param[1],
+        b = param[2],
+        pkwmoe = param[3],
+        lambda = param[4]
+    )
+)
+
+plot(mle)
+```
+
+
+```{r}
+remove(list=ls())
+dKwMOE <- function(x,a, b, pKwMOE, lambda)
+{
+    dexp <- dexp(x=x,rate=lambda)
+    pexp <- pexp(q=x,rate=lambda)
+    
+    p1 <- (a*b*(1-pKwMOE)*dexp*(pexp^(a-1))) / ((1-pKwMOE*(1-pexp))^(a+1))
+    p2 <- (1 - ((pexp)/(1 - pKwMOE*(1-pexp)))^a )^(b-1)
+    p1 * p2
+}
+
+
+pKwMOE <- function(q, a, b, pKwMOE, lambda)
+{
+    pexp <- pexp(q=q,rate=lambda)
+    1 - (1-(pexp/(1-pKwMOE*(1-pexp)))^a)^b
+}
+
+qKwMOE <- function(prob=0.5, a, b, pKwMOE, lambda)
+{
+    x_q <- (1/lambda)*log10( (1 - pKwMOE*(1-(1-prob)^(1/b))^(1/a) ) / (1 - (1-(1-prob)^(1/b))^(1/a)) )
+    x_q
+}
+
+rKwMOE <- function(n, a, b, pKwMOE, lambda)
+{
+    U <- runif(n)
+    x_q <- (1/lambda)*log10( (1 - pKwMOE*(1-(1-U)^(1/b))^(1/a) ) / (1 - (1-(1-U)^(1/b))^(1/a)) )
+    x_q
+}
+
+params <- list(a=c(0.5,1.5),
+               b=c(0.5,1.5),
+               pKwMOE=c(0.3,0.8),
+               lambda=c(0.005,0.05))
+
+library(fitdistrplus)
+B     <-  2000
+n     <-  seq(20, 200, 30)
+L     <-  length(n)
+param <-  c(params$a[1], params$b[1], params$pKwMOE[1], params$lambda[1])
+mle   <-  list()
+mle   <-  matrix(ncol = 4, nrow = B)
+vies  <-  rmse <- matrix(ncol = 4, nrow = L)
+for(j in 1:L)
+{
+  cat("j=",j," ")
+  set.seed(123)
+  for(i in 1:B)
+  {
+    cat("i=",i, " ")
+    dados     <-  rKwMOE(n[j], a = param[1], b = param[2], pKwMOE = param[3], lambda = param[4])
+    head(dados)
+    mle[i,]   <-  fitdist(
+        dados,
+        distr = 'KwMOE',
+        method = "mle",
+        start = list(
+            a = param[1],
+            b = param[2],
+            pKwMOE = param[3],
+            lambda = param[4]
+        ),
+        lower = c(a=0.001,
+                 b=0.001,
+                 pKwMOE=-Inf,
+                 lambda=0.001),
+        upper = c(a=Inf,#Inf,
+                  b=Inf,#Inf,
+                  pKwMOE=0.98,
+                  lambda=Inf)
+    )$estimate
+  }
+  aux         <-   mle - matrix(param, ncol = 4, nrow = B, byrow = T)
+  vies[j,]    <-   apply(aux, 2, mean, na.rm = T)
+  rmse[j,]    <-   apply(aux ^  2, 2, mean, na.rm = T)
+  cat(i, n[j], "\n")
+}
+
+
+x11();
+par(mfrow = c(2, 2))
+plot(n, vies[,1], type = "b", pch = 15)
+plot(n, rmse[,1], type = "b", pch = 15)
+plot(n, vies[,2], type = "b", pch = 15)
+plot(n, rmse[,2], type = "b", pch = 15)
+```
+
+<!-- alpha <- 3; m = ((alpha -1) / alpha) ^ (1 / ( 2 * alpha)) * 4 -->
+<!-- abline(v = m, lwd = 3, col = "red") -->
+
+<!-- med <- qnorm(3 / 4) ^ (1 / alpha) * 4 -->
+<!-- abline(v = med, lwd = 3, col = "green")   -->
+
+<!-- me <- sqrt(2  ^  (1 / alpha) / pi) * gamma((1 + alpha) / (2 * alpha)) * 4 -->
+<!-- abline(v = me, lwd = 3, col = "blue")   -->
+<!-- # ################################################################################ -->
+<!-- # Vdgenhalf <- Vectorize(dgenhalf, 'alpha') -->
+<!-- # ################################################################################ -->
+<!-- # x <- seq(0.01, 100, length.out = 1000) -->
+<!-- # fx <- dgenhalf(x, theta = 70, alpha = 5) -->
+<!-- # #x11();plot(x, fx, type = 'l', col = "blue", lwd = 2) -->
+<!-- # fx <- dgenhalf(x, theta = 70, alpha = 4) -->
+<!-- # #lines(x, fx, type = 'l', col = "red", lwd = 2) -->
+<!-- # ################################################################################ -->
+<!-- # fx <- Vdgenhalf(x, theta = 70, alpha = c(2:10)) -->
+<!-- # x11(); matplot(x, fx, type = 'l', lty = 1, lwd = 2) -->
+
+
+
+
+
+
+
+
+
+
+
+<!-- x <- c(0.01, 0.01, 0.02, 0.02, 0.02, 0.03, 0.03, 0.04, 0.05, 0.06, 0.07, 0.07, 0.08, 0.09, 0.09, -->
+<!-- 0.10, 0.10, 0.11, 0.11, 0.12, 0.13, 0.18, 0.19, 0.20, 0.23, 0.24, 0.24, 0.29, 0.34, 0.3, -->
+<!-- 0.36, 0.38, 0.40, 0.42, 0.43, 0.52, 0.54, 0.56, 0.60, 0.60, 0.63, 0.65, 0.67, 0.68, 0.72, -->
+<!-- 0.72, 0.72, 0.73, 0.79, 0.79, 0.80, 0.80, 0.83, 0.85, 0.90, 0.92, 0.95, 0.99, 1.00, 1.01, -->
+<!-- 1.02, 1.03, 1.05, 1.10, 1.10, 1.11, 1.15, 1.18, 1.20, 1.29, 1.31, 1.33, 1.34, 1.40, 1.43, -->
+<!-- 1.45, 1.50, 1.51, 1.52, 1.53, 1.54, 1.54, 1.55, 1.58, 1.60, 1.63, 1.64, 1.80, 1.80, 1.81, -->
+<!-- 2.02, 2.05, 2.14, 2.17, 2.33, 3.03, 3.03, 3.34, 4.20, 4.69, 7.89) -->
+
+<!-- library(fitdistrplus) -->
+<!-- fit.genhal  <- fitdist(data = x, distr = 'genhalf', start = list(alpha = 1, theta = 1)) -->
+<!-- fit.weibul  <- fitdist(data = x, distr = 'weibull', start = list(shape = 1, scale = 1)) -->
+<!-- fit.logn    <- fitdist(data = x, distr = 'lnorm', start = list(meanlog = 1, sdlog = 1)) -->
+
+<!-- x11(); cdfcomp(list(fit.genhal,fit.weibul, fit.logn)) -->

@@ -1,0 +1,171 @@
+---
+title: "<center> Lista de Exercícios II - Bioestatística (DES4060 - Turma 2022) </center>"
+author: 
+    - "<center> Prof.: Dr. Robson Marcelo Rossi </center>"
+    - "<center> Aluno: João Matheus Slujala Krüger Taborda Hneda </center>"
+#geometry: margin=2cm
+#geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
+geometry: "left=1.1cm,right=1.1cm,top=1.75cm,bottom=1.75cm"
+header-includes:
+    - \usepackage{fancyhdr}
+always_allow_html: true
+output:
+  pdf_document:
+    #includes:
+    #  before_body: comentarioslista.tex # Comentarios iniciais lista do professor
+    fig_caption: yes
+    toc: yes
+    toc_depth: 5
+    keep_tex: yes
+    number_sections: no
+  html_document:
+    toc: yes
+    toc_depth: '5'
+    df_print: paged
+toc-title: Sumário
+---
+
+\newpage
+
+
+```{r, global_options, include=FALSE}
+#install.packages("formatR") # (to wrap the lines of code blocks)
+knitr::opts_chunk$set(echo = TRUE#,tidy.opts = list(width.cutoff = 80), tidy = FALSE # (to wrap the lines of code blocks)
+                      )
+```
+
+# Especificações
+
+Encontrar alguma distribuição de probabilidade nova (pelo menos 2 parâmetros) e:
+
+- escrever quem fez, onde usou, como usou, propriedades
+- implementar as funções d, p, q r
+- fazer figuras
+- realizar estudo de simulação (estimação máxima verossimilhança)
+– variar tamanho da amostra e ver como as estimativas mudam, viés, rmse
+
+
+# Escrever quem fez, onde usou, como usou, propriedades
+
+# Implementar as funções p, d, q, r
+
+
+```{r}
+# F(x)
+pgenhalf <- function(q, theta, alpha)
+{
+  2 * pnorm((q / theta) ^ alpha) - 1
+}
+```
+
+
+```{r}
+# f(x)
+dgenhalf <- function(x, theta, alpha)
+{
+  xtheta <- (x / theta) ^ alpha
+  sqrt(2 / pi) * (alpha / x) * xtheta  * exp(-0.5 * xtheta ^ 2)
+}
+```
+
+
+```{r}
+# The quantile function
+qgenhalf <- function(p, theta, alpha)
+{
+  theta * qnorm((p + 1) * 0.5) ^ (1 / alpha)
+}
+```
+
+
+```{r}
+rgenhalf <- function(n, theta, alpha)
+{
+  U <- runif(n)
+  theta * qnorm((U + 1) * 0.5) ^ (1 / alpha)
+}
+
+```
+
+
+```{r}
+x <- rgenhalf(10000, theta = 4, alpha = 3)
+hist(x, prob = T)
+y <- seq(0.1, 100, 0.0001)
+lines(y, dgenhalf(y, theta = 4, alpha = 3), lwd = 2, col = "red")
+```
+
+
+# fazer figuras
+
+<!-- alpha <- 3; m = ((alpha -1) / alpha) ^ (1 / ( 2 * alpha)) * 4 -->
+<!-- abline(v = m, lwd = 3, col = "red") -->
+
+<!-- med <- qnorm(3 / 4) ^ (1 / alpha) * 4 -->
+<!-- abline(v = med, lwd = 3, col = "green") -->
+
+<!-- me <- sqrt(2  ^  (1 / alpha) / pi) * gamma((1 + alpha) / (2 * alpha)) * 4 -->
+<!-- abline(v = me, lwd = 3, col = "blue") -->
+<!-- # ################################################################################ -->
+<!-- # Vdgenhalf <- Vectorize(dgenhalf, 'alpha') -->
+<!-- # ################################################################################ -->
+<!-- # x <- seq(0.01, 100, length.out = 1000) -->
+<!-- # fx <- dgenhalf(x, theta = 70, alpha = 5) -->
+<!-- # #x11();plot(x, fx, type = 'l', col = "blue", lwd = 2) -->
+<!-- # fx <- dgenhalf(x, theta = 70, alpha = 4) -->
+<!-- # #lines(x, fx, type = 'l', col = "red", lwd = 2) -->
+<!-- # ################################################################################ -->
+<!-- # fx <- Vdgenhalf(x, theta = 70, alpha = c(2:10)) -->
+<!-- # x11(); matplot(x, fx, type = 'l', lty = 1, lwd = 2) -->
+
+
+
+
+
+<!-- library(fitdistrplus) -->
+<!-- B     <-  2000 -->
+<!-- n     <-  seq(20, 200, 30) -->
+<!-- L     <-  length(n) -->
+<!-- param <-  c(10, 5) -->
+<!-- mle   <-  list() -->
+<!-- mle   <-  matrix(ncol = 2, nrow = B) -->
+<!-- vies  <-  rmse <- matrix(ncol = 2, nrow = L) -->
+<!-- for(j in 1:L) -->
+<!-- { -->
+<!--   set.seed(123) -->
+<!--   for(i in 1:B) -->
+<!--   { -->
+<!--     dados     <-  rgenhalf(n[j], theta = param[1], alpha = param[2]) -->
+<!--     mle[i,]   <-  fitdist(dados, distr = 'genhalf', method = "mle", -->
+<!--                     start = list(theta = param[1], alpha = param[2]))$estimate -->
+<!--   } -->
+<!--   aux         <-   mle - matrix(param, ncol = 2, nrow = B, byrow = T) -->
+<!--   vies[j,]    <-   apply(aux, 2, mean, na.rm = T) -->
+<!--   rmse[j,]    <-   apply(aux ^  2, 2, mean, na.rm = T) -->
+<!--   cat(i, n[j], "\n") -->
+<!-- } -->
+<!-- x11(); -->
+<!-- par(mfrow = c(2, 2)) -->
+<!-- plot(n, vies[,1], type = "b", pch = 15) -->
+<!-- plot(n, rmse[,1], type = "b", pch = 15) -->
+<!-- plot(n, vies[,2], type = "b", pch = 15) -->
+<!-- plot(n, rmse[,2], type = "b", pch = 15) -->
+
+
+
+
+
+<!-- x <- c(0.01, 0.01, 0.02, 0.02, 0.02, 0.03, 0.03, 0.04, 0.05, 0.06, 0.07, 0.07, 0.08, 0.09, 0.09, -->
+<!-- 0.10, 0.10, 0.11, 0.11, 0.12, 0.13, 0.18, 0.19, 0.20, 0.23, 0.24, 0.24, 0.29, 0.34, 0.3, -->
+<!-- 0.36, 0.38, 0.40, 0.42, 0.43, 0.52, 0.54, 0.56, 0.60, 0.60, 0.63, 0.65, 0.67, 0.68, 0.72, -->
+<!-- 0.72, 0.72, 0.73, 0.79, 0.79, 0.80, 0.80, 0.83, 0.85, 0.90, 0.92, 0.95, 0.99, 1.00, 1.01, -->
+<!-- 1.02, 1.03, 1.05, 1.10, 1.10, 1.11, 1.15, 1.18, 1.20, 1.29, 1.31, 1.33, 1.34, 1.40, 1.43, -->
+<!-- 1.45, 1.50, 1.51, 1.52, 1.53, 1.54, 1.54, 1.55, 1.58, 1.60, 1.63, 1.64, 1.80, 1.80, 1.81, -->
+<!-- 2.02, 2.05, 2.14, 2.17, 2.33, 3.03, 3.03, 3.34, 4.20, 4.69, 7.89) -->
+
+<!-- library(fitdistrplus) -->
+<!-- fit.genhal  <- fitdist(data = x, distr = 'genhalf', start = list(alpha = 1, theta = 1)) -->
+<!-- fit.weibul  <- fitdist(data = x, distr = 'weibull', start = list(shape = 1, scale = 1)) -->
+<!-- fit.logn    <- fitdist(data = x, distr = 'lnorm', start = list(meanlog = 1, sdlog = 1)) -->
+
+<!-- x11(); cdfcomp(list(fit.genhal,fit.weibul, fit.logn)) -->
